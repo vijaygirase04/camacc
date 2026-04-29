@@ -78,7 +78,7 @@ export const ManagePhotosModal = ({ isOpen, onClose, eventId, onUpdate }: Manage
     setIsDeletingAll(true);
     try {
       // 1. Get all paths
-      const paths = photos.flatMap(p => [p.storage_path, p.thumbnail_path].filter(Boolean));
+      const paths = photos.flatMap(p => [p.storage_path, p.thumbnail_path]).filter((path): path is string => Boolean(path));
       
       // 2. Delete from storage in batches
       if (paths.length > 0) {
