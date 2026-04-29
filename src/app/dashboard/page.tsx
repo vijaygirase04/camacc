@@ -5,19 +5,23 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Filter, MoreVertical, Calendar, Users, Eye, 
-  Clock, TrendingUp, DollarSign, Image as ImageIcon, ArrowUpRight,
+  Clock, TrendingUp, IndianRupee, Image as ImageIcon, ArrowUpRight,
   ChevronRight, Settings, Trash2, Download, Share2, LogOut, Copy, ExternalLink, X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
 import { CreateEventModal } from '@/components/dashboard/CreateEventModal';
 import { UploadModal } from '@/components/dashboard/UploadModal';
+import { EventDetailsModal } from '@/components/dashboard/EventDetailsModal';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventObj, setSelectedEventObj] = useState<any | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +103,7 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { label: 'Total Revenue', value: `$${(events.length * 450).toLocaleString()}.00`, icon: DollarSign, trend: '+12.5%', color: 'bg-primary' },
+    { label: 'Total Revenue', value: formatCurrency(events.length * 450), icon: IndianRupee, trend: '+12.5%', color: 'bg-primary' },
     { label: 'Active Events', value: events.filter(e => e.status === 'active').length.toString(), icon: Calendar, trend: `+${events.length}`, color: 'bg-secondary' },
     { label: 'Total Photos', value: photoStats.total.toLocaleString(), icon: ImageIcon, trend: `+${photoStats.total}`, color: 'bg-purple-500' },
     { label: 'Client Faces', value: photoStats.faces.toLocaleString(), icon: Users, trend: `+${photoStats.faces}`, color: 'bg-orange-500' },
@@ -296,8 +300,12 @@ export default function DashboardPage() {
                       </tr>
                     ) : (
                       filteredEvents.map((event) => (
-                        <tr key={event.id} className="group hover:bg-surface-container-low/50 transition-all cursor-pointer">
-                           <td className="px-8 py-6" onClick={() => { setSelectedEventId(event.id); setIsUploadModalOpen(true); }}>
+                        <tr 
+                          key={event.id} 
+                          className="group hover:bg-surface-container-low/50 transition-all cursor-pointer"
+                          onClick={() => { setSelectedEventObj(event); setIsEventDetailsOpen(true); }}
+                        >
+                           <td className="px-8 py-6">
                               <div className="flex items-center gap-4">
                                  <div className="w-12 h-12 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
                                     <ImageIcon size={22} />
@@ -325,7 +333,7 @@ export default function DashboardPage() {
                               <p className="text-[10px] text-on-surface-variant font-bold uppercase">Photos</p>
                            </td>
                            <td className="px-8 py-6">
-                              <p className="text-sm font-bold text-on-surface">${((event.photos?.[0]?.count || 0) * (event.pricing_rules?.per_photo || 50)).toLocaleString()}.00</p>
+                              <p className="text-sm font-bold text-on-surface">{formatCurrency((event.photos?.[0]?.count || 0) * (event.pricing_rules?.per_photo || 50))}</p>
                               <p className="text-[10px] text-on-surface-variant font-bold uppercase">Estimated</p>
                            </td>
                            <td className="px-8 py-6 text-right">
@@ -379,6 +387,12 @@ export default function DashboardPage() {
                                         className="w-full text-left px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-all flex items-center gap-3"
                                       >
                                         <Share2 size={16} /> Share with Clients
+                                      </button>
+                                      <button 
+                                        onClick={() => { setSelectedEventObj(event); setIsEventDetailsOpen(true); setActiveMenu(null); }}
+                                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-all flex items-center gap-3"
+                                      >
+                                        <Settings size={16} /> Manage Media
                                       </button>
                                       <div className="my-1 border-t border-surface-container-high" />
                                       {deleteConfirm === event.id ? (
@@ -439,6 +453,22 @@ export default function DashboardPage() {
           onSuccess={() => { fetchEvents(); fetchStats(); }}
         />
       )}
+
+      <EventDetailsModal
+        isOpen={isEventDetailsOpen}
+        onClose={() => {
+          setIsEventDetailsOpen(false);
+          setSelectedEventObj(null);
+        }}
+        event={selectedEventObj}
+        onDelete={handleDeleteEvent}
+        onOpenUpload={(eventId) => {
+          setIsEventDetailsOpen(false);
+          setSelectedEventId(eventId);
+          setIsUploadModalOpen(true);
+        }}
+        onUpdate={fetchEvents}
+      />
     </div>
   );
 }

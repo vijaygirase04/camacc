@@ -3,10 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Download, ArrowLeft, Grid, Layout, Heart, Eye, Filter, User, Share2, X, Check, RefreshCw } from 'lucide-react';
+import { Lock, ShoppingCart, Download, ArrowLeft, Grid, Layout, Heart, Eye, Filter, User, Share2, X, Check, RefreshCw } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase, getPublicUrl } from '@/lib/supabase';
 import { CartDrawer } from '@/components/gallery/CartDrawer';
+import { formatCurrency, getGlobalPrice } from '@/lib/utils';
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function GalleryPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'matched'>('all');
   const [matchedPhotoIds, setMatchedPhotoIds] = useState<string[]>([]);
   const [eventDetails, setEventDetails] = useState<any>(null);
+  const isExpired = eventDetails?.expiry_date && new Date() > new Date(eventDetails.expiry_date);
 
   useEffect(() => {
     const ids = sessionStorage.getItem('matched_photo_ids');
@@ -87,18 +89,20 @@ export default function GalleryPage() {
 
         {/* Filter Tabs */}
         <div className="flex bg-surface-container p-1 rounded-full">
-          <button 
-            onClick={() => setActiveFilter('all')}
-            className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
-          >
-            All Photos
-          </button>
+          {matchedPhotoIds.length === 0 && (
+            <button 
+              onClick={() => setActiveFilter('all')}
+              className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${activeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+            >
+              All Photos
+            </button>
+          )}
           <button 
             onClick={() => setActiveFilter('matched')}
             className={`px-6 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${activeFilter === 'matched' ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
           >
             <User size={14} />
-            Found In Scan
+            {matchedPhotoIds.length > 0 ? "My Photos Only" : "Scan My Face"}
           </button>
         </div>
 
@@ -142,8 +146,25 @@ export default function GalleryPage() {
 
       {/* Photo Grid */}
       <main className="pb-32 px-6 md:px-12 max-w-[1440px] mx-auto w-full">
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-          {loading ? (
+        {isExpired ? (
+          <div className="py-24 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-8">
+            <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-6 border border-red-100">
+              <Lock size={40} />
+            </div>
+            <h3 className="text-3xl font-bold text-on-surface mb-2 font-h2">Gallery Access Expired</h3>
+            <p className="text-on-surface-variant max-w-md mx-auto leading-relaxed">
+              The access period for this event has ended. Please contact the photographer if you still wish to purchase these photos.
+            </p>
+            <button 
+              onClick={() => router.push('/event/login')}
+              className="mt-8 px-8 py-3 bg-primary text-white font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+            >
+              Go Back
+            </button>
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+            {loading ? (
             Array(8).fill(0).map((_, i) => (
               <div key={i} className="w-full aspect-[4/5] bg-surface-container rounded-2xl animate-pulse" />
             ))
@@ -219,7 +240,7 @@ export default function GalleryPage() {
                       ) : (
                         <>
                           <ShoppingCart size={18} />
-                          + $24.00
+                          + {formatCurrency(eventDetails?.pricing_rules?.per_photo || getGlobalPrice())}
                         </>
                       )}
                     </button>
@@ -234,33 +255,36 @@ export default function GalleryPage() {
             ))
           )}
         </div>
+        )}
       </main>
 
       {/* Floating Toolbar */}
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 h-16 px-2 bg-on-surface/90 backdrop-blur-2xl rounded-full border border-white/10 flex items-center gap-1 shadow-2xl z-50">
-        <button 
-          className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${activeFilter === 'all' ? 'bg-white text-on-surface shadow-lg' : 'text-white/50 hover:text-white'}`}
-          onClick={() => setActiveFilter('all')}
-        >
-          <Grid size={18} />
-          Grid
-        </button>
+        {matchedPhotoIds.length === 0 && (
+          <button 
+            className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${activeFilter === 'all' ? 'bg-white text-on-surface shadow-lg' : 'text-white/50 hover:text-white'}`}
+            onClick={() => setActiveFilter('all')}
+          >
+            <Grid size={18} />
+            All Event Photos
+          </button>
+        )}
         <button 
           className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${activeFilter === 'matched' ? 'bg-white text-on-surface shadow-lg' : 'text-white/50 hover:text-white'}`}
           onClick={() => {
              if (matchedPhotoIds.length > 0) setActiveFilter('matched');
-             else router.push('/event/scan');
+             else router.push(`/event/${eventId}/scan`);
           }}
         >
           {matchedPhotoIds.length > 0 ? (
             <>
-              <Check size={18} />
-              Found For You
+              <User size={18} />
+              My Photos ({matchedPhotoIds.length})
             </>
           ) : (
             <>
               <RefreshCw size={18} />
-              Scan My Face
+              Identify Me
             </>
           )}
         </button>
@@ -321,7 +345,7 @@ export default function GalleryPage() {
                            <Layout className="text-primary" size={20} />
                            <span className="text-sm font-medium">Standard License</span>
                         </div>
-                        <span className="font-bold text-primary">$24.00</span>
+                        <span className="font-bold text-primary">{formatCurrency(eventDetails?.pricing_rules?.per_photo || getGlobalPrice())}</span>
                      </div>
                      <div className="flex items-center gap-2 px-2 text-[10px] text-green-600 font-bold uppercase">
                         <Check size={14} />
@@ -343,7 +367,7 @@ export default function GalleryPage() {
                     ) : (
                       <>
                         <ShoppingCart size={20} />
-                        Add to Cart — $24
+                        Add to Cart — {formatCurrency(eventDetails?.pricing_rules?.per_photo || getGlobalPrice())}
                       </>
                     )}
                   </button>
@@ -366,6 +390,7 @@ export default function GalleryPage() {
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
         onRemove={(id) => setCartItems(cartItems.filter(i => i.id !== id))}
+        pricePerPhoto={eventDetails?.pricing_rules?.per_photo || getGlobalPrice()}
       />
     </div>
   );

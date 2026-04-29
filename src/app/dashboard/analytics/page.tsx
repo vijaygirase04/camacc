@@ -4,13 +4,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  TrendingUp, TrendingDown, DollarSign, Calendar, 
+  TrendingUp, TrendingDown, IndianRupee, Calendar, 
   Download, Users, BarChart3, Activity, ChevronRight, 
   Zap, LogOut, Settings
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -36,17 +37,17 @@ export default function AnalyticsPage() {
   }, 0);
 
   const revenueData = [
-    { label: 'Total Earnings', value: `$${totalEstRevenue.toLocaleString()}.00`, trend: '+18.2%', color: 'bg-primary' },
-    { label: 'Avg / Event', value: events.length ? `$${Math.round(totalEstRevenue / events.length).toLocaleString()}.00` : '$0', trend: '+5.4%', color: 'bg-secondary' },
+    { label: 'Total Earnings', value: formatCurrency(totalEstRevenue), trend: '+18.2%', color: 'bg-primary' },
+    { label: 'Avg / Event', value: events.length ? formatCurrency(Math.round(totalEstRevenue / events.length)) : formatCurrency(0), trend: '+5.4%', color: 'bg-secondary' },
     { label: 'Conversion Rate', value: '12.8%', trend: '-2.1%', color: 'bg-purple-500' },
     { label: 'Total Photos', value: photoCount.toLocaleString(), trend: `+${photoCount}`, color: 'bg-green-500' },
   ];
 
   const recentOrders = [
-    { id: '#ORD-9921', client: 'John Doe', event: 'Wedding Raj & Sim', amount: '$48.00', date: '2 min ago', status: 'Completed' },
-    { id: '#ORD-9920', client: 'Alice Smith', event: 'Corporate Gala 24', amount: '$24.00', date: '15 min ago', status: 'Completed' },
-    { id: '#ORD-9919', client: 'Sarah Connor', event: 'Wedding Raj & Sim', amount: '$96.00', date: '1 hour ago', status: 'Pending' },
-    { id: '#ORD-9918', client: 'Mike Ross', event: 'Tech Summit EX', amount: '$72.00', date: '3 hours ago', status: 'Completed' },
+    { id: '#ORD-9921', client: 'John Doe', event: 'Wedding Raj & Sim', amount: formatCurrency(4800), date: '2 min ago', status: 'Completed' },
+    { id: '#ORD-9920', client: 'Alice Smith', event: 'Corporate Gala 24', amount: formatCurrency(2400), date: '15 min ago', status: 'Completed' },
+    { id: '#ORD-9919', client: 'Sarah Connor', event: 'Wedding Raj & Sim', amount: formatCurrency(9600), date: '1 hour ago', status: 'Pending' },
+    { id: '#ORD-9918', client: 'Mike Ross', event: 'Tech Summit EX', amount: formatCurrency(7200), date: '3 hours ago', status: 'Completed' },
   ];
 
   const handleExportCSV = () => {
@@ -56,7 +57,7 @@ export default function AnalyticsPage() {
       e.event_date,
       e.status,
       e.photos?.[0]?.count || 0,
-      `$${((e.photos?.[0]?.count || 0) * (e.pricing_rules?.per_photo || 50))}`
+      formatCurrency((e.photos?.[0]?.count || 0) * (e.pricing_rules?.per_photo || 50))
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -163,7 +164,7 @@ export default function AnalyticsPage() {
              >
                 <div className="flex items-center justify-between mb-6">
                    <div className={`p-3 rounded-2xl ${stat.color} text-white`}>
-                      <DollarSign size={24} />
+                      <IndianRupee size={24} />
                    </div>
                    <div className={`flex items-center gap-1 text-xs font-bold uppercase ${stat.trend.startsWith('+') ? 'text-green-600' : 'text-red-500'}`}>
                       {stat.trend.startsWith('+') ? <TrendingUp size={14} /> : <TrendingDown size={14} />}

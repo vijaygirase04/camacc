@@ -6,17 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBag, Trash2, CreditCard, Loader2, ShieldCheck, Zap } from 'lucide-react';
 import { getPublicUrl } from '@/lib/supabase';
 import { initiateCheckout } from '@/lib/payment';
+import { formatCurrency } from '@/lib/utils';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: any[];
   onRemove: (id: string) => void;
+  pricePerPhoto: number;
 }
 
-export const CartDrawer = ({ isOpen, onClose, items, onRemove }: CartDrawerProps) => {
+export const CartDrawer = ({ isOpen, onClose, items, onRemove, pricePerPhoto }: CartDrawerProps) => {
   const [loading, setLoading] = React.useState(false);
-  const total = items.length * 24; // Normalized price to $24 based on the new gallery design
+  const total = items.length * pricePerPhoto;
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -111,7 +113,7 @@ export const CartDrawer = ({ isOpen, onClose, items, onRemove }: CartDrawerProps
                         <p className="font-bold text-on-surface line-clamp-1">Photo #{item.id.slice(0, 8).toUpperCase()}</p>
                       </div>
                       <div className="flex items-center justify-between pt-2">
-                        <p className="text-lg font-bold text-on-surface">$24.00</p>
+                        <p className="text-lg font-bold text-on-surface">{formatCurrency(pricePerPhoto)}</p>
                         <button 
                           onClick={() => onRemove(item.id)}
                           className="p-2 text-outline hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
@@ -131,7 +133,7 @@ export const CartDrawer = ({ isOpen, onClose, items, onRemove }: CartDrawerProps
                 <div className="space-y-3">
                    <div className="flex items-center justify-between text-sm text-on-surface-variant">
                       <span>Subtotal ({items.length} items)</span>
-                      <span>${total.toFixed(2)}</span>
+                      <span>{formatCurrency(total)}</span>
                    </div>
                    <div className="flex items-center justify-between text-sm text-green-600 font-medium">
                       <span>Delivery</span>
@@ -142,7 +144,7 @@ export const CartDrawer = ({ isOpen, onClose, items, onRemove }: CartDrawerProps
                    </div>
                    <div className="pt-3 flex items-center justify-between">
                       <span className="text-on-surface font-bold">Total Amount</span>
-                      <span className="text-3xl font-bold text-primary font-h1">${total.toFixed(2)}</span>
+                      <span className="text-3xl font-bold text-primary font-h1">{formatCurrency(total)}</span>
                    </div>
                 </div>
 
