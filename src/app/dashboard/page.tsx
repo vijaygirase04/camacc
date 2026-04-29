@@ -15,14 +15,29 @@ import { CreateEventModal } from '@/components/dashboard/CreateEventModal';
 import { UploadModal } from '@/components/dashboard/UploadModal';
 import { EventDetailsModal } from '@/components/dashboard/EventDetailsModal';
 
+interface Event {
+  id: string;
+  event_id: string;
+  title: string;
+  event_date: string;
+  expiry_date: string;
+  status: 'active' | 'expired';
+  pricing_rules: {
+    per_photo: number;
+    [key: string]: any;
+  };
+  photos?: { count: number }[];
+  [key: string]: any;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedEventObj, setSelectedEventObj] = useState<any | null>(null);
-  const [events, setEvents] = useState<any[]>([]);
+  const [selectedEventObj, setSelectedEventObj] = useState<Event | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMenu, setActiveMenu] = useState<string | null>(null);

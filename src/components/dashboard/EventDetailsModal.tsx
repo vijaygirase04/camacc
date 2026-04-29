@@ -10,7 +10,18 @@ import { ManagePhotosModal } from './ManagePhotosModal';
 interface EventDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  event: any | null;
+  event: {
+    id: string;
+    title: string;
+    event_id: string;
+    event_date: string;
+    expiry_date?: string;
+    status: string;
+    pricing_rules?: {
+      per_photo: number;
+    };
+    photos?: { count: number }[];
+  } | null;
   onDelete: (eventId: string) => Promise<void>;
   onOpenUpload: (eventId: string) => void;
   onUpdate?: () => void;
@@ -63,7 +74,7 @@ export const EventDetailsModal = ({ isOpen, onClose, event, onDelete, onOpenUplo
         .update({
           title: editData.title,
           event_date: editData.event_date,
-          pricing_rules: { ...event.pricing_rules, per_photo: Number(editData.price_per_photo) }
+          pricing_rules: { ...(event.pricing_rules || {}), per_photo: Number(editData.price_per_photo) }
         })
         .eq('id', event.id);
 

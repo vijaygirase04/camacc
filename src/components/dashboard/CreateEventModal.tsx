@@ -29,6 +29,7 @@ export const CreateEventModal = ({ isOpen, onClose, onSuccess }: CreateEventModa
       expiryDate.setDate(expiryDate.getDate() + parseInt(formData.expiry));
 
       const { data, error } = await supabase.from('events').insert({
+        title: formData.name,
         event_id: formData.event_id,
         event_date: formData.date,
         expiry_date: expiryDate.toISOString(),
@@ -74,6 +75,21 @@ export const CreateEventModal = ({ isOpen, onClose, onSuccess }: CreateEventModa
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Event Title</label>
+                  <div className="relative">
+                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Rahul & Sneha Wedding"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Event ID (Unique)</label>
                   <div className="relative">

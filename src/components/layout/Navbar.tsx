@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Camera, LayoutDashboard, Settings, LogOut, IndianRupee, Tag } from 'lucide-react';
-import { getGlobalPrice, setGlobalPrice, formatCurrency } from '@/lib/utils';
+import { getGlobalPrice, setGlobalPrice } from '@/lib/utils';
 
 export const Navbar = () => {
   return (

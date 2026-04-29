@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
+import { X, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase, getPublicUrl } from '@/lib/supabase';
 
 interface ManagePhotosModalProps {
@@ -12,13 +12,22 @@ interface ManagePhotosModalProps {
   onUpdate?: () => void;
 }
 
+import Image from 'next/image';
+
+interface Photo {
+  id: string;
+  storage_path: string;
+  thumbnail_path?: string;
+  [key: string]: any;
+}
+
 export const ManagePhotosModal = ({ isOpen, onClose, eventId, onUpdate }: ManagePhotosModalProps) => {
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
-  const fetchPhotos = async () => {
+  const fetchPhotos = React.useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('photos')
@@ -30,23 +39,23 @@ export const ManagePhotosModal = ({ isOpen, onClose, eventId, onUpdate }: Manage
       setPhotos(data);
     }
     setLoading(false);
-  };
+  }, [eventId]);
 
   useEffect(() => {
     if (isOpen) {
       fetchPhotos();
     }
-  }, [isOpen, eventId]);
+  }, [isOpen, fetchPhotos]);
 
-  const handleDeletePhoto = async (photo: any) => {
+  const handleDeletePhoto = async (photo: Photo) => {
     if (!window.confirm('Delete this photo?')) return;
     
     setDeletingId(photo.id);
     try {
       // Delete from storage
-      await supabase.storage.from('photos').remove([photo.storage_path]);
+      await supabase.storage.from('event-photos').remove([photo.storage_path]);
       if (photo.thumbnail_path) {
-        await supabase.storage.from('photos').remove([photo.thumbnail_path]);
+        await supabase.storage.from('event-photos').remove([photo.thumbnail_path]);
       }
       
       // Delete from database
@@ -73,7 +82,7 @@ export const ManagePhotosModal = ({ isOpen, onClose, eventId, onUpdate }: Manage
       
       // 2. Delete from storage in batches
       if (paths.length > 0) {
-        await supabase.storage.from('photos').remove(paths);
+        await supabase.storage.from('event-photos').remove(paths);
       }
       
       // 3. Delete from database
@@ -150,9 +159,10 @@ export const ManagePhotosModal = ({ isOpen, onClose, eventId, onUpdate }: Manage
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {photos.map((photo) => (
                     <div key={photo.id} className="relative group aspect-square rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100">
-                      <img
+                      <Image
                         src={getPublicUrl(photo.thumbnail_path || photo.storage_path)}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform group-hover:scale-110"
                         alt="Event photo"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

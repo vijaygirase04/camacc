@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, CheckCircle2, AlertCircle, RefreshCw, Image as ImageIcon, ShieldCheck, Zap, ArrowRight, FileText } from 'lucide-react';
+import { X, Upload, CheckCircle2, RefreshCw, Image as ImageIcon, ShieldCheck, Zap, ArrowRight, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { loadModels, getMultiFaceEmbeddings } from '@/lib/face-api';
 
@@ -54,7 +54,7 @@ export const UploadModal = ({ isOpen, onClose, eventId, onSuccess }: UploadModal
         
         // 2. Upload to storage
         const filePath = `${eventId}/${Date.now()}-${file.name}`;
-        const { data: storageData, error: storageError } = await supabase.storage
+        const { error: storageError } = await supabase.storage
           .from('event-photos')
           .upload(filePath, file);
 
@@ -258,7 +258,7 @@ export const UploadModal = ({ isOpen, onClose, eventId, onSuccess }: UploadModal
                      <h3 className="text-xl font-bold text-on-surface">{status}</h3>
                   </div>
                   <p className="text-sm text-on-surface-variant max-w-xs mx-auto">
-                    We're currently extracting facial embeddings to automate client gallery delivery.
+                    We&apos;re currently extracting facial embeddings to automate client gallery delivery.
                   </p>
                 </div>
               )}
